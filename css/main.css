@@ -1,0 +1,29 @@
+.container-main {
+	position: relative;
+	margin: auto;
+}
+
+ul.nav-tabs {
+	bottom: 0;
+	height: 100%;
+	width: 300px;
+	overflow: auto;
+	position: fixed;
+}
+
+#container-posts {
+	position: absolute;
+	left: 300px;
+}
+
+#posts > div{
+	padding: 10px 150px 20px 150px;
+}
+
+.post-title {
+	text-align: center;
+}
+
+#load-more {
+  display: none;
+}

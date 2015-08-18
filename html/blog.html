@@ -1,0 +1,183 @@
+<!Doctype html>
+
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../css/main.css">
+		<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+		<script type="text/javascript" src="../js/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="../js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="../js/handlebars-v3.0.3.js"></script>
+		<script type="text/javascript" src="../js/jquery.history.js"></script>
+		<script type="text/javascript" src="../js/jquery.scrollintoview.js"></script>
+	</head>
+	<body data-spy="scroll" data-target="#blogScrollspy">
+		<section>
+			<div class="container-main">
+				<div class="hidden-sm hidden-xs" id="container-sidebar">
+					<div id="blogScrollspy">
+						<ul class="nav nav-tabs nav-stacked affix" onmouseover="document.body.style.overflow='hidden';"onmouseout="document.body.style.overflow='auto';">
+						</ul>
+					</div>
+				</div>
+				<div id="container-posts">
+					<div id="posts">
+					</div>
+					<div id="load-more">
+						
+					</div>
+			</div>
+		</section>
+
+		<script type="text/javascript">
+			$(document).ready(function(){
+
+				History.Adapter.bind(window,'statechange',function(){
+					var State = History.getState();
+				});
+
+				/*var fakePostNum = 100;
+				var postArray = [];
+				for (var i = 1; i <= fakePostNum; i++) {
+					postArray.push(i);
+				}
+				*/
+				var posts = blogLoader();
+				var sidebar = blogLoader();
+
+				var sidebarScroll = infiniteScroll({
+					binder: $('ul.nav-tabs'),
+			        cb: function () {
+						$('#blogScrollspy').on('activate.bs.scrollspy', function() {
+							var $active = $('ul.nav-tabs li.active')[0];
+							var title = $($active).find('h1').text();
+							$($active).scrollintoview({duration: 0});
+							History.pushState({state:1}, title, "?title=" + title.replace(' ','-').toLowerCase());
+						});
+			            return sidebar.loadContent($('ul.nav-tabs'), '#sidebar-template');
+			        }
+			    });
+
+			    var postScroll = infiniteScroll({
+			        cb: function () {
+			            return posts.loadContent($('#posts'), '#post-template');
+			        }
+			    });		
+			});
+
+			function infiniteScroll (options) {
+				var defaultOptions = {
+					binder: $(window), // parent scrollable element
+					loadSpot: 300,
+					template: '',
+					cb: function () { },
+				}
+				
+				options = $.extend(defaultOptions, options);
+				options.shouldLoad = true;
+				
+				var returnedOptions = {
+					setShouldLoad: function (bool) { options.shouldLoad = bool; if(bool) { scrollHandler(); } },
+				};
+				
+				function scrollHandler () { 
+					var scrollTop = options.binder.scrollTop();
+					var height = options.binder[0].innerHeight || options.binder.height();
+					if (options.shouldLoad && scrollTop >= (options.binder[0].scrollHeight || $(document).height()) - height - options.loadSpot) {
+						options.shouldLoad = false;
+						if(typeof options.cb === "function") {
+							new Promise(function (resolve) {resolve();}).then(function() { return options.cb(); }).then(function (isNotFinished) {
+								if(typeof isNotFinished === "boolean") {
+									options.shouldLoad = isNotFinished;
+								}
+							});
+						}
+					}
+				}
+				
+				options.binder.scroll(scrollHandler);
+				
+				scrollHandler();
+				
+				return returnedOptions;
+				
+			}
+
+			function blogLoader() {
+				var amountLoaded = 0;
+				var numInitLoad = 20;
+				var numMoreLoad = 5;
+				var maxLoad = 100;
+
+				function loadContent ($el, template) {
+					if(amountLoaded !== maxLoad) {
+						var numToLoad = $el.children().length === 0 ? numInitLoad : numMoreLoad;
+
+						var lastLoadIndex = Math.min(maxLoad, amountLoaded + numToLoad);
+
+						for(var i = amountLoaded; i < lastLoadIndex; ++i) {
+							addContent($el, i, template);
+						}
+						amountLoaded = lastLoadIndex; 
+						return true;
+					} else {
+						return false;
+					}
+				}
+				
+				function addContent ($el, i, template) {
+					var postTemplate = Handlebars.compile($(template).html());
+					$el.append(postTemplate({title: 'Post ' + (i+1), postid: 'post-' + (i+1)}));
+				}
+				
+				return {
+					addContent: addContent,
+					loadContent: loadContent,
+					resetAmountLoaded: function () { amountLoaded = 0 }
+				}
+			}
+
+		</script>
+
+		<script id="sidebar-template" type="text/x-handlebars-template">
+			<li class="{{#if active}}active{{/if}}">
+				<a href="?title={{postid}}" data-target="#{{postid}}">
+					<h1>{{title}}</h1>
+				</a>
+			</li>
+		</script>
+
+		<script id="post-template" type="text/x-handlebars-template">
+			<div>
+				<h1 class="post-title" id="{{postid}}">{{title}}</h1>
+				<div class="hipsum">
+					<p>
+						Flannel lumbersexual trust fund, flexitarian VHS pickled dreamcatcher next level listicle actually normcore deep v.  Aesthetic leggings fashion axe listicle messenger bag, crucifix semiotics.  Tattooed readymade flannel chambray, shabby chic squid whatever fingerstache.  Cornhole butcher keytar banh mi cliche.  Pitchfork cray Marfa, pickled kogi tousled organic.  Swag polaroid chambray ugh, irony disrupt gentrify literally.  Readymade kale chips leggings put a bird on it, farm-to-table small batch mustache roof party ethical vinyl try-hard keytar viral.
+					</p>
+					<p>
+						Cronut letterpress cornhole blog.  Cronut McSweeney's flexitarian, authentic cold-pressed kale chips listicle cornhole cliche letterpress cardigan plaid readymade.  High Life synth 90's, swag bicycle rights cliche single-origin coffee keffiyeh pour-over distillery art party.  Salvia kitsch ennui tilde, leggings Godard cred Wes Anderson artisan dreamcatcher heirloom normcore.  Gluten-free crucifix Shoreditch keytar, ethical single-origin coffee meggings stumptown Schlitz pop-up cliche.  Tofu Blue Bottle church-key ugh gluten-free, wayfarers next level Schlitz small batch.  Meggings tattooed 3 wolf moon, fanny pack irony aesthetic health goth beard lumbersexual post-ironic McSweeney's migas.
+					</p>
+					<p>
+						Drinking vinegar Shoreditch shabby chic, VHS High Life keffiyeh messenger bag blog bespoke tofu locavore deep v asymmetrical heirloom.  Food truck butcher photo booth DIY tousled stumptown.  Crucifix stumptown chillwave, health goth scenester cliche American Apparel DIY polaroid selvage aesthetic squid raw denim.  Mumblecore four dollar toast gastropub, messenger bag single-origin coffee umami disrupt cold-pressed four loko.  Salvia listicle vinyl, keffiyeh lumbersexual pork belly yr biodiesel hoodie fingerstache heirloom VHS Neutra Thundercats.  Asymmetrical drinking vinegar four dollar toast narwhal American Apparel, freegan flannel Blue Bottle vinyl stumptown.  You probably haven't heard of them banjo mlkshk, bespoke 3 wolf moon food truck Thundercats.
+					</p>
+					<p>
+						Helvetica lo-fi messenger bag, pop-up keffiyeh four loko single-origin coffee PBR&amp;B.  Distillery sriracha bicycle rights, seitan paleo cliche banh mi Etsy twee put a bird on it keffiyeh.  3 wolf moon +1 Banksy plaid, Tumblr iPhone crucifix tofu.  Cliche sriracha try-hard 3 wolf moon bespoke asymmetrical, street art High Life pork belly yr cray heirloom.  Bushwick gentrify Banksy cardigan photo booth, chillwave Marfa messenger bag Portland ugh next level forage organic fanny pack.  Ethical vinyl meditation skateboard, YOLO cornhole mumblecore swag.  Asymmetrical post-ironic cronut fingerstache umami try-hard, swag tofu Pitchfork single-origin coffee.
+					</p>
+					<p>
+						Flannel lumbersexual trust fund, flexitarian VHS pickled dreamcatcher next level listicle actually normcore deep v.  Aesthetic leggings fashion axe listicle messenger bag, crucifix semiotics.  Tattooed readymade flannel chambray, shabby chic squid whatever fingerstache.  Cornhole butcher keytar banh mi cliche.  Pitchfork cray Marfa, pickled kogi tousled organic.  Swag polaroid chambray ugh, irony disrupt gentrify literally.  Readymade kale chips leggings put a bird on it, farm-to-table small batch mustache roof party ethical vinyl try-hard keytar viral.
+					</p>
+					<p>
+						Cronut letterpress cornhole blog.  Cronut McSweeney's flexitarian, authentic cold-pressed kale chips listicle cornhole cliche letterpress cardigan plaid readymade.  High Life synth 90's, swag bicycle rights cliche single-origin coffee keffiyeh pour-over distillery art party.  Salvia kitsch ennui tilde, leggings Godard cred Wes Anderson artisan dreamcatcher heirloom normcore.  Gluten-free crucifix Shoreditch keytar, ethical single-origin coffee meggings stumptown Schlitz pop-up cliche.  Tofu Blue Bottle church-key ugh gluten-free, wayfarers next level Schlitz small batch.  Meggings tattooed 3 wolf moon, fanny pack irony aesthetic health goth beard lumbersexual post-ironic McSweeney's migas.
+					</p>
+					<p>
+						Drinking vinegar Shoreditch shabby chic, VHS High Life keffiyeh messenger bag blog bespoke tofu locavore deep v asymmetrical heirloom.  Food truck butcher photo booth DIY tousled stumptown.  Crucifix stumptown chillwave, health goth scenester cliche American Apparel DIY polaroid selvage aesthetic squid raw denim.  Mumblecore four dollar toast gastropub, messenger bag single-origin coffee umami disrupt cold-pressed four loko.  Salvia listicle vinyl, keffiyeh lumbersexual pork belly yr biodiesel hoodie fingerstache heirloom VHS Neutra Thundercats.  Asymmetrical drinking vinegar four dollar toast narwhal American Apparel, freegan flannel Blue Bottle vinyl stumptown.  You probably haven't heard of them banjo mlkshk, bespoke 3 wolf moon food truck Thundercats.
+					</p>
+					<p>
+						Helvetica lo-fi messenger bag, pop-up keffiyeh four loko single-origin coffee PBR&amp;B.  Distillery sriracha bicycle rights, seitan paleo cliche banh mi Etsy twee put a bird on it keffiyeh.  3 wolf moon +1 Banksy plaid, Tumblr iPhone crucifix tofu.  Cliche sriracha try-hard 3 wolf moon bespoke asymmetrical, street art High Life pork belly yr cray heirloom.  Bushwick gentrify Banksy cardigan photo booth, chillwave Marfa messenger bag Portland ugh next level forage organic fanny pack.  Ethical vinyl meditation skateboard, YOLO cornhole mumblecore swag.  Asymmetrical post-ironic cronut fingerstache umami try-hard, swag tofu Pitchfork single-origin coffee.
+					</p>
+				</div>
+			</div>
+			<hr>
+		</script>
+	</body>
+</html>
+
